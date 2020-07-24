@@ -48,24 +48,6 @@
       margin-top: 3px;
       font-size: 12px;
       /*background-color: #ecc;*/
-      .increase {
-        width: 0;
-        height: 0;
-        border-width: 6px;
-        border-style: solid;
-        border-color:transparent transparent #f00 transparent;
-        /*background-color: lightcoral;*/
-        margin: 0 0 3px 5px;
-     }
-      .decrease {
-        width: 0;
-        height: 0;
-        border-width: 6px;
-        border-style: solid;
-        border-color:#000 transparent transparent transparent;
-        /*background-color: lightcoral;*/
-        margin: 3px 0 0 5px;
-      }
     }
   }
 </style>
