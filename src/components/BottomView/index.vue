@@ -2,9 +2,11 @@
   <div class="bottom-view">
     <div class="view">
       <el-card shadow="hover">
+        <!-- 头部header模板 -->
         <template v-slot:header>
           <div class="title-wrapper">关键词搜索</div>
         </template>
+        <!-- body部分模板 -->
         <template>
           <div class="chart-wrapper">
             <div class="chart-inner">
