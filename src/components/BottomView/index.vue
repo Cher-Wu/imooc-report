@@ -12,12 +12,12 @@
             <div class="chart-inner">
               <div class="chart">
                 <div class="chart-title">搜索用户数</div>
-                <div class="chart-data">104,866</div>
+                <div class="chart-data">{{userCount}}</div>
                 <v-chart :options="searchUserOption"/>
               </div>
               <div class="chart">
                 <div class="chart-title">搜索量</div>
-                <div class="chart-data">218,833</div>
+                <div class="chart-data">{{searchCount}}</div>
                 <v-chart :options="searchNumberOption"/>
               </div>
             </div>
@@ -27,12 +27,12 @@
                 <el-table-column prop="keyword" label="关键字" />
                 <el-table-column prop="count" label="总搜索量" />
                 <el-table-column prop="users" label="搜索用户数" />
-                <el-table-column prop="rate" label="点击率" />
+                <el-table-column prop="rate" label="搜索占比" />
               </el-table>
               <el-pagination
                 layout="prev, pager, next"
-                :page-size="4"
-                :total="100"
+                :page-size="pageSize"
+                :total="total"
                 background
                 @current-change="onPageChange"
               ></el-pagination>
@@ -47,7 +47,7 @@
           <div class="title-wrapper">
             <div class="title">分类销售排行</div>
             <div class="radio-wrapper">
-              <el-radio-group v-model="radioSelect" size = "small">
+              <el-radio-group v-model="radioSelect" size = "small" @change="onCategoryChange">
                 <el-radio-button label="品类" />
                 <el-radio-button label="商品" />
               </el-radio-group>
@@ -65,157 +65,69 @@
 </template>
 
 <script>
+    import commonDataMixin from '../../mixins/commonDataMixins'
     export default {
+      mixins: [commonDataMixin],
       data () {
         return {
-          searchUserOption: {
-            xAxis: {
-              type: 'category',
-              show: false,
-              // boundaryGap表示图表与两侧x轴的距离,默认是存在距离的，所以不贴边有空隙，需要进行设置
-              boundaryGap: false
-            },
-            yAxis: {
-              show: false
-            },
-            series: [{
-              type: 'line',
-              data: [234, 435, 654, 675, 233, 565, 454, 333, 546, 800, 244, 325],
-              // 面积填色
-              areaStyle: {
-                color: '#adf7d1',
-                opacity: 0.5
-                // 色值备选：#7dace4，#95e8d7，#adf7d1
-              },
-              lineStyle: {
-                color: '#95e8d7'
-              },
-              // 节点样式
-              itemStyle: {
-                opacity: 0
-              },
-              // 使线条平滑
-              smooth: true
-            }],
-            // 撑满区域显示
-            grid: {
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0
-            }
-          },
-          searchNumberOption: {
-            xAxis: {
-              type: 'category',
-              show: false,
-              // 图表与两侧x轴的距离
-              boundaryGap: false
-            },
-            yAxis: {
-              show: false
-            },
-            series: [{
-              type: 'line',
-              data: [234, 435, 654, 675, 233, 565, 454, 333, 546, 800, 244, 325],
-              // 面积填色
-              areaStyle: {
-                color: '#adf7d1',
-                opacity: 0.5
-                // 色值备选：#7dace4，#95e8d7，#adf7d1
-              },
-              lineStyle: {
-                color: '#95e8d7'
-              },
-              // 节点样式
-              itemStyle: {
-                opacity: 0
-              },
-              // 使线条平滑
-              smooth: true
-            }],
-            // 撑满区域显示
-            grid: {
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0
-            }
-          },
-          tableData: [{
-            id: 1, rank: 1, keyword: '北京', count: 100, users: 90, rate: '90%'
-          }, {
-            id: 2, rank: 2, keyword: '北京', count: 100, users: 90, rate: '90%'
-          }, {
-            id: 3, rank: 3, keyword: '北京', count: 100, users: 90, rate: '90%'
-          }, {
-            id: 4, rank: 4, keyword: '北京', count: 100, users: 90, rate: '90%'
-          }],
+          searchUserOption: {},
+          searchNumberOption: {},
+          userCount: 0,
+          searchCount: 0,
+          // 表格总数据
+          totalData: [],
+          // 每一页的数据
+          tableData: [],
+          // 数据条目总数
+          total: 0,
+          // 每一页显示的条目数
+          pageSize: 4,
           radioSelect: '品类',
           categoryOptions: {}
         }
       },
       methods: {
         onPageChange (page) {
-          console.log(page)
+          this.renderTable(page)
+        },
+        onCategoryChange (type) {
+          this.radioSelect = type
+          this.renderPieChart()
         },
         renderPieChart () {
-          // ['粉面粥店', '简餐便当', '汉堡披萨', '香锅冒菜', '小吃炸串', '地方菜系'],
-          const mockData = [
-            {
-              legendName: '粉面粥店',
-              value: 67,
-              percent: '15.40%',
+          // 任何一个值为空，则返回
+          if (!this.categoryShop.data1 || !this.categoryFruit.data1) {
+            return
+          }
+          let data = []
+          let axis = []
+          let total = 0
+          const colorBar = ['#8971d0', '#7dace4', '#95e8d7', '#adf7d1', '#dbc6eb', '#b9cced', '#a0ccff']
+          if (this.radioSelect === '品类') {
+            data = this.categoryShop.data1
+            axis = this.categoryShop.axisX
+            total = data.reduce((s, i) => s + i, 0)
+          } else {
+            data = this.categoryFruit.data1
+            axis = this.categoryFruit.axisX
+            total = data.reduce((s, i) => s + i, 0)
+          }
+          const chartData = []
+          data.forEach((item, index) => {
+            const percent = `${(item / total * 100).toFixed(2)}%`
+            chartData.push({
+              legendName: axis[index],
+              value: item,
+              percent: percent,
               itemStyle: {
-                color: '#8971d0'
+                color: colorBar[index]
               },
-              // name属性用于标识图例
-              name: '粉面粥店占比15.40%'
-            }, {
-              legendName: '简餐便当',
-              value: 97,
-              percent: '22.30%',
-              itemStyle: {
-                color: '#7dace4'
-              },
-              name: '简餐便当占比15.40%'
-            }, {
-              legendName: '汉堡披萨',
-              value: 92,
-              percent: '21.15%',
-              itemStyle: {
-                color: '#95e8d7'
-              },
-              name: '汉堡披萨占比15.40%'
-            }, {
-              legendName: '香锅冒菜',
-              value: 67,
-              percent: '15.40%',
-              itemStyle: {
-                color: '#adf7d1'
-              },
-              name: '香锅冒菜占比15.40%'
-            }, {
-              legendName: '小吃炸串',
-              value: 67,
-              percent: '15.40%',
-              itemStyle: {
-                color: '#dbc6eb'
-              },
-              name: '小吃炸串占比15.40%'
-            }, {
-              legendName: '地方菜系',
-              value: 67,
-              percent: '15.40%',
-              itemStyle: {
-                color: '#b9cced'
-              },
-              name: '地方菜系占比15.40%'
-            }
-          ]
+              name: `${axis[index]}占比${percent}`
+            })
+          })
           this.categoryOptions = {
             title: [{
-              text: '品类分布',
+              text: `${this.radioSelect}分布`,
               textStyle: {
                 fontSize: 14,
                 color: '#666'
@@ -224,7 +136,7 @@
               top: 20
             }, {
               text: '累计订单量',
-              subtext: '320',
+              subtext: total,
               x: '35%',
               y: '42.5%',
               textStyle: {
@@ -240,7 +152,7 @@
             series: {
               name: '品类分布',
               type: 'pie',
-              data: mockData,
+              data: chartData,
               label: {
                 normal: {
                   show: true,
@@ -286,16 +198,102 @@
             tooltip: {
               trigger: 'item',
               formatter: function (params) {
-                console.log(params)
+                // console.log(params)
                 const str = params.seriesName + '<br />' + params.marker + params.data.legendName + '<br />数量：' + params.data.value + '<br />占比：' + params.data.percent
                 return str
               }
             }
           }
+        },
+        renderTable (page) {
+          this.tableData = this.totalData.slice((page - 1) * this.pageSize, page * this.pageSize)
+        },
+        renderLineChart () {
+          // 为了确保this的指向是正确的，所以使用箭头函数
+          const creatOption = (key) => {
+            const axis = []
+            const searchData = []
+            this.wordCloud.forEach(item => {
+              axis.push(item.word)
+              searchData.push(item[key])
+            })
+            return {
+              xAxis: {
+                type: 'category',
+                data: axis,
+                show: false,
+                // boundaryGap表示图表与两侧x轴的距离,默认是存在距离的，所以不贴边有空隙，需要进行设置
+                boundaryGap: false
+              },
+              yAxis: {
+                show: false
+              },
+              tooltip: {},
+              series: [{
+                type: 'line',
+                data: searchData,
+                // 面积填色
+                areaStyle: {
+                  color: '#adf7d1',
+                  opacity: 0.5
+                  // 色值备选：#7dace4，#95e8d7，#adf7d1
+                },
+                lineStyle: {
+                  color: '#95e8d7'
+                },
+                // 节点样式
+                itemStyle: {
+                  opacity: 0
+                },
+                // 使线条平滑
+                smooth: true
+              }],
+              // 撑满区域显示
+              grid: {
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0
+              }
+            }
+          }
+          // 获取不同折线图数据 在原始数据中 对应的字段名
+          this.searchUserOption = creatOption('user')
+          this.searchNumberOption = creatOption('count')
         }
       },
       mounted () {
         this.renderPieChart()
+      },
+      watch: {
+        wordCloud () {
+          console.log('watch!!!')
+          console.log(this.wordCloud)
+          const totalArray = []
+          this.wordCloud.forEach((item, index) => {
+            totalArray.push({
+              id: index + 1,
+              rank: index + 1,
+              keyword: item.word,
+              count: item.count,
+              users: item.user,
+              rate: `${((item.user / item.count) * 100).toFixed(2)}%`
+            })
+          })
+          this.totalData = totalArray
+          this.total = this.totalData.length
+          this.renderTable(1)
+          // reduce累加器
+          this.userCount = this.thousands(this.totalData.reduce((s, i) => i.users + s, 0))
+          this.searchCount = this.thousands(this.totalData.reduce((s, i) => i.count + s, 0))
+          this.renderLineChart()
+        },
+        categoryShop () {
+          this.renderPieChart()
+        },
+        categoryFruit () {
+          this.renderPieChart()
+        }
       }
     }
 </script>

@@ -59,16 +59,79 @@
 </template>
 
 <script>
+    import commonDataMixin from '../../mixins/commonDataMixins'
   /* eslint-disable */
     export default {
+      mixins: [commonDataMixin],
       data () {
         return {
+          // 默认选中的选项卡为'1' 
           activeIndex: '1',
           radioSelect: '今日',
           data: null,
-          chartOption:{
+          chartOption: {},
+          // 自动获取三种时段
+          pickerOptions: {
+            shortcuts: [{
+              text: "最近一周",
+              onClick(picker) {
+                // new Date()获取的是当前的时间
+                const start = new Date()
+                const end = new Date()
+                // getTime()获取时间戳，并倒退七天
+                start.setTime(start.getTime()-3600*24*1000*7)
+                picker.$emit('pick',[start, end])
+              }
+            },{
+              text: "最近一个月",
+              onClick(picker) {
+                const start = new Date()
+                const end = new Date()
+                start.setTime(start.getTime()-3600*24*1000*30)
+                picker.$emit('pick',[start, end])
+              }
+            },{
+              text: "最近三个月",
+              onClick(picker) {
+                const start = new Date()
+                const end = new Date()
+                start.setTime(start.getTime()-3600*24*1000*90)
+                picker.$emit('pick',[start, end])
+              }
+            }]
+          }
+        }
+      },
+      computed: {
+        // 根据选项卡的选中状态， 判断此时显示销售额排行榜还是访问量排行榜
+        rankData () {
+          // console.log(this.activeIndex)
+          return this.activeIndex === '1' ? this.orderRank : this.userRank
+        }
+      },
+      watch: {
+        // 默认状态下渲染年度销售额，只要调用完orderFullYear ()，就可以开始  渲染
+        orderFullYear () {
+          this.render(this.orderFullYear, this.orderFullYearAxis, '年度销售额')
+        }
+      },
+      methods: {
+        // onMenuSelect监听选择的选项卡的id
+        onMenuSelect(index) {
+          // 把index传入rankData中
+          this.activeIndex = index
+          if (index === '1') {
+            this.render(this.orderFullYear, this.orderFullYearAxis, '年度销售额')
+          } else {
+            this.render(this.userFullYear, this.userFullYearAxis, '年度用户访问量')
+          }
+          console.log(this.activeIndex)
+        },
+        // 用于判断当前图表的数据源--销售额or访问量
+        render(data, axis, title) {
+          this.chartOption = {
             title: {
-              text:'年度销售额',
+              text: title,
               textStyle: {
                 fontSize: 12,
                 color: '#666'
@@ -78,7 +141,7 @@
             },
             xAxis:{
               type: 'category',
-              data: ['1月', '2月' ,'3月', '4月' ,'5月', '6月' ,'7月', '8月' ,'9月', '10月' ,'11月', '12月'],
+              data: axis,
               axisLine: {
                 lineStyle: {
                   color: '#999'
@@ -111,7 +174,7 @@
             series:[{
               type: 'bar',
               barWidth: '35%',
-              data: [234, 435, 654, 675, 233, 565, 454, 333, 546, 800, 244, 325]
+              data: data
             }],
             color: ['#7dace4'],
             grid: {
@@ -120,75 +183,7 @@
               right: 60,
               bottom: 50
             }
-          },
-          // 自动获取三种时段
-          pickerOptions: {
-            shortcuts: [{
-              text: "最近一周",
-              onClick(picker) {
-                // new Date()获取的是当前的时间
-                const start = new Date()
-                const end = new Date()
-                // getTime()获取时间戳，并倒退七天
-                start.setTime(start.getTime()-3600*24*1000*7)
-                picker.$emit('pick',[start, end])
-              }
-            },{
-              text: "最近一个月",
-              onClick(picker) {
-                const start = new Date()
-                const end = new Date()
-                start.setTime(start.getTime()-3600*24*1000*30)
-                picker.$emit('pick',[start, end])
-              }
-            },{
-              text: "最近三个月",
-              onClick(picker) {
-                const start = new Date()
-                const end = new Date()
-                start.setTime(start.getTime()-3600*24*1000*90)
-                picker.$emit('pick',[start, end])
-              }
-            }]
-          },
-          // 默认选中的选项卡为'1'
-          rankData: [{
-            no: 1,
-            name: '肯德基',
-            money: '323,234'
-          },{
-            no: 2,
-            name: '肯德基',
-            money: '323,234'
-          },{
-            no: 3,
-            name: '肯德基',
-            money: '323,234'
-          },
-            {
-              no: 4,
-              name: '肯德基',
-              money: '323,234'
-            },{
-              no: 5,
-              name: '肯德基',
-              money: '323,234'
-            },{
-              no: 6,
-              name: '肯德基',
-              money: '323,234'
-            },{
-              no: 7,
-              name: '肯德基',
-              money: '323,234'
-            }]
-        }
-      },
-      methods: {
-        // onMenuSelect监听选择的选项卡的id
-        onMenuSelect(index) {
-          this.activeIndex = index
-          console.log(index)
+          }
         }
       }
     }

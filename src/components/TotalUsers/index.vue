@@ -1,7 +1,7 @@
 <template>
   <common-card
     title="累计用户数"
-    value="2,284,634"
+    :value="userToday"
   >
     <template>
       <v-chart :options ="getOptions()" />
@@ -9,10 +9,10 @@
     <template v-slot:footer>
       <div class="total-users-footer">
         <span>日同比</span>
-        <span class="emphasis">128.40%</span>
+        <span class="emphasis">{{userGrowthLastDay}}</span>
         <div class="increase"></div>
         <span class="month">月同比</span>
-        <span class="emphasis">185.50%</span>
+        <span class="emphasis">{{userGrowthLastMonth}}%</span>
         <div class="decrease"></div>
       </div>
     </template>
@@ -21,10 +21,12 @@
 
 <script>
   import CommonCard from '../CommonCard'
+  import commonDataMixin from '../../mixins/commonDataMixins'
     export default {
         components: {
           CommonCard
         },
+        mixins: [commonDataMixin],
       methods: {
           getOptions () {
             return {
@@ -34,6 +36,7 @@
                 left: 0,
                 right: 0
               },
+              tooltip: {},
               xAxis: {
                 type: 'value',
                 show: false
@@ -43,25 +46,28 @@
                 show: false
               },
               series: [{
+                name: '上月平台用户数',
                 type: 'bar',
                 // 通过stack属性把多个图形合并为1个
                 stack: '总量',
-                data: [200],
+                data: [this.userLastMonth],
                 barWidth: '20%',
                 itemStyle: {
                   color: '#95e8d7'
                 }
               }, {
+                name: '今日平台用户数',
                 type: 'bar',
                 stack: '总量',
-                data: [300],
+                data: [this.userToday],
                 itemStyle: {
                   color: '#eee'
                 }
               }, {
                 // 自定义图形????????
                 type: 'custom',
-                data: [200],
+                // 设置三角形标志的位置
+                data: [this.userLastMonth],
                 renderItem: (params, api) => {
                   const value = api.value(0)
                   // endPoint获取节点位置

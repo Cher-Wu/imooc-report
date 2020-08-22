@@ -390,8 +390,8 @@
     '武汉': [114.31, 30.52],
     '大庆': [125.03, 46.58]
   }
-  console.log(data);
-  console.log(geoCoordMap);
+  // console.log(data);
+  // console.log(geoCoordMap);
   // toPoints把数据转换成需要的格式，即{ name: '南京', value: [118.78, 32.04, 100]}
   function toPoints(data, geodata) {
     const res =[];
@@ -592,7 +592,7 @@
               position: 'top',
               //position注记的显示位置
               formatter: function(val) {
-                console.log(val);
+                // console.log(val);
                 return `${val.data.name}${val.value[2]}`
               }
               //formatter选择s显示哪个属性
